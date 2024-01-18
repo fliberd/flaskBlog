@@ -5,6 +5,7 @@ import smtplib
 import secrets
 import sqlite3
 from os import mkdir
+from time import tzname
 from random import randint
 from os.path import exists
 from datetime import datetime
@@ -26,6 +27,7 @@ from forms import (
 from flask import (
     Flask,
     flash,
+    url_for,
     request,
     session,
     redirect,
@@ -33,6 +35,10 @@ from flask import (
     render_template,
     send_from_directory,
 )
+
+
+def currentTimeZone():
+    return tzname[0]
 
 
 def currentDate():
@@ -54,14 +60,17 @@ def currentTime(seconds=False, microSeconds=False):
 def message(color, message):
     print(
         f"\n\033[94m[{currentDate()}\033[0m"
-        f"\033[95m {currentTime(seconds=True)}]\033[0m"
+        f"\033[95m {currentTime(seconds=True)}\033[0m"
+        f"\033[94m {currentTimeZone()}] \033[0m"
         f"\033[9{color}m {message}\033[0m\n"
     )
     logFile = open(LOG_FILE_ROOT, "a", encoding="utf-8")
     logFile.write(
         f"[{currentDate()}"
-        f"|{currentTime(seconds=True,microSeconds=True)}]"
-        f" {message}\n"
+        f"|{currentTime(seconds=True,microSeconds=True)}"
+        f"|{currentTimeZone()}]"
+        "\t"
+        f"{message}\n"
     )
     logFile.close()
 
@@ -70,7 +79,8 @@ def addPoints(points, user):
     connection = sqlite3.connect(DB_USERS_ROOT)
     cursor = connection.cursor()
     cursor.execute(
-        f'update users set points = points+{points} where userName = "{user}"'
+        """update users set points = points+? where userName = ? """,
+        [(points), (user)],
     )
     connection.commit()
     message("2", f'{points} POINTS ADDED TO "{user}"')
@@ -80,6 +90,7 @@ def getProfilePicture(userName):
     connection = sqlite3.connect(DB_USERS_ROOT)
     cursor = connection.cursor()
     cursor.execute(
-        f'select profilePicture from users where lower(userName) = "{userName.lower()}"'
+        """select profilePicture from users where lower(userName) = ? """,
+        [(userName.lower())],
     )
     return cursor.fetchone()[0]

@@ -11,35 +11,60 @@ searchBlueprint = Blueprint("search", __name__)
 
 @searchBlueprint.route("/search/<query>", methods=["GET", "POST"])
 def search(query):
+    query = query.replace("%20", " ")
     queryNoWhiteSpace = query.replace("+", "")
     query = query.replace("+", " ")
     connection = sqlite3.connect(DB_USERS_ROOT)
     cursor = connection.cursor()
     queryUsers = cursor.execute(
-        f"select * from users where userName like '%{query}%'"
+        """select * from users where userName like ? """,
+        [
+            ("%" + query + "%"),
+        ],
     ).fetchall()
     queryUsers = cursor.execute(
-        f"select * from users where userName like '%{queryNoWhiteSpace}%'"
+        """select * from users where userName like ? """,
+        [
+            ("%" + queryNoWhiteSpace + "%"),
+        ],
     ).fetchall()
     connection = sqlite3.connect(DB_POSTS_ROOT)
     cursor = connection.cursor()
     queryTags = cursor.execute(
-        f"select * from posts where tags like '%{query}%'"
+        """select * from posts where tags like ? """,
+        [
+            ("%" + query + "%"),
+        ],
     ).fetchall()
     queryTitles = cursor.execute(
-        f"select * from posts where title like '%{query}%'"
+        """select * from posts where title like ? """,
+        [
+            ("%" + query + "%"),
+        ],
     ).fetchall()
     queryAuthors = cursor.execute(
-        f"select * from posts where author like '%{query}%'"
+        """select * from posts where author like ? """,
+        [
+            ("%" + query + "%"),
+        ],
     ).fetchall()
     queryTags = cursor.execute(
-        f"select * from posts where tags like '%{queryNoWhiteSpace}%'"
+        """select * from posts where tags like ? """,
+        [
+            ("%" + queryNoWhiteSpace + "%"),
+        ],
     ).fetchall()
     queryTitles = cursor.execute(
-        f"select * from posts where title like '%{queryNoWhiteSpace}%'"
+        """select * from posts where title like ? """,
+        [
+            ("%" + queryNoWhiteSpace + "%"),
+        ],
     ).fetchall()
     queryAuthors = cursor.execute(
-        f"select * from posts where author like '%{queryNoWhiteSpace}%'"
+        """select * from posts where author like ? """,
+        [
+            ("%" + queryNoWhiteSpace + "%"),
+        ],
     ).fetchall()
     posts = []
     users = []
@@ -56,16 +81,21 @@ def search(query):
     match queryUsers == []:
         case False:
             users.append(queryUsers)
-    if not posts and not users:
-        empty = True
+    match not posts and not users:
+        case True:
+            empty = True
     resultsID = []
     for post in posts:
         for post in post:
-            if post[0] not in resultsID:
-                resultsID.append(post[0])
+            match post[0] not in resultsID:
+                case True:
+                    resultsID.append(post[0])
     posts = []
     for postID in resultsID:
-        cursor.execute(f"select * from posts where id = {postID}")
+        cursor.execute(
+            """select * from posts where id = ? """,
+            [(postID)],
+        )
         posts.append(cursor.fetchall())
     return render_template(
         "search.html",

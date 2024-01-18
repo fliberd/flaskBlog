@@ -1,5 +1,6 @@
 from helpers import (
     flash,
+    url_for,
     request,
     session,
     sqlite3,
@@ -21,31 +22,43 @@ def dashboard(userName):
         case True:
             match session["userName"].lower() == userName.lower():
                 case True:
+                    match request.method == "POST":
+                        case True:
+                            match "postDeleteButton" in request.form:
+                                case True:
+                                    deletePost(request.form["postID"])
+                                    return (
+                                        redirect(
+                                            url_for(
+                                                "dashboard.dashboard", userName=userName
+                                            )
+                                        ),
+                                        301,
+                                    )
                     connection = sqlite3.connect(DB_POSTS_ROOT)
                     cursor = connection.cursor()
                     cursor.execute(
-                        f'select * from posts where author = "{session["userName"]}"'
+                        """select * from posts where author = ? """,
+                        [(session["userName"])],
                     )
                     posts = cursor.fetchall()
                     connection = sqlite3.connect(DB_COMMENTS_ROOT)
                     cursor = connection.cursor()
                     cursor.execute(
-                        f'select * from comments where lower(user) = "{userName.lower()}"'
+                        """select * from comments where lower(user) = ? """,
+                        [(userName.lower())],
                     )
-                    if request.method == "POST":
-                        if "postDeleteButton" in request.form:
-                            postID = request.form["postID"]
-                            deletePost(postID)
-                            return redirect(f"/dashboard/{userName}")
                     comments = cursor.fetchall()
-                    if posts:
-                        showPosts = True
-                    elif not posts:
-                        showPosts = False
-                    if comments:
-                        showComments = True
-                    elif not comments:
-                        showComments = False
+                    match posts:
+                        case []:
+                            showPosts = False
+                        case _:
+                            showPosts = True
+                    match comments:
+                        case []:
+                            showComments = False
+                        case _:
+                            showComments = True
                     return render_template(
                         "/dashboard.html",
                         posts=posts,

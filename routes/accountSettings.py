@@ -19,13 +19,16 @@ def accountSettings():
             connection = sqlite3.connect(DB_USERS_ROOT)
             cursor = connection.cursor()
             cursor.execute(
-                f'select userName from users where userName = "{session["userName"]}"'
+                """select userName from users where userName = ? """,
+                [(session["userName"])],
             )
             user = cursor.fetchall()
-            if request.method == "POST":
-                if "userDeleteButton" in request.form:
-                    deleteUser(user[0][0])
-                    return redirect(f"/")
+            match request.method == "POST":
+                case True:
+                    match "userDeleteButton" in request.form:
+                        case True:
+                            deleteUser(user[0][0])
+                            return redirect(f"/")
             return render_template("accountSettings.html", user=user)
         case False:
             return redirect("/login/redirect=&accountsettings")

@@ -2,8 +2,8 @@
   --themePrimary: #000;
   --themeSecondary: #fff;
   --themeHelper: #303030;
-  --primaryColor: #ff206e;
-  --primaryHelper: #ff4f8c;
+  --primaryColor: #f43f5e;
+  --primaryHelper: #f43f5dc5;
 }
 
 * {
@@ -11,6 +11,32 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   color: var(--themePrimary);
   overflow-wrap: break-word !important;
+}
+
+*::-webkit-scrollbar {
+  width: 0.4rem;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 1rem;
+  background: var(--primaryColor);
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-button {
+  background: transparent;
+}
+
+*::selection {
+  background: var(--primaryColor);
+}
+
+*::-moz-selection {
+  background: var(--primaryColor);
+}
+
+*::-webkit-selection {
+  background: var(--primaryColor);
 }
 
 html {
@@ -26,25 +52,13 @@ a {
   user-select: none;
 }
 
-*::-webkit-scrollbar {
-  width: 0.4rem;
-}
-
-*::-webkit-scrollbar-thumb {
-  border-radius: 1rem;
-  background: var(--themePrimary);
-}
-
-*::-webkit-scrollbar-track,
-*::-webkit-scrollbar-button {
-  background: transparent;
-}
-
 button {
   background-color: transparent;
   border: 0;
 }
-
+.ti {
+  font-size: 1.5rem;
+}
 .form {
   height: fit-content;
   width: fit-content;

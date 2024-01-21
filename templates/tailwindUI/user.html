@@ -69,7 +69,7 @@
   <h1 class="my-4 text-center text-2xl text-rose-500 select-none">Posts</h1>
   {% for post in posts %}
   <div
-    class="w-11/12 md:w-10/12 lg:w-3/4 xl:w-1/2 h-96 mx-auto py-4 px-2 mb-8 border-2 rounded-md shadow-md
+    class="w-11/12 md:w-10/12 lg:w-3/4 xl:w-1/2 h-fit mx-auto py-4 px-2 mb-8 border-2 rounded-md shadow-md
   border-gray-500/25"
   >
     <a
@@ -97,8 +97,12 @@
   >
     <div tag="content my-2">{{comment[2]}}</div>
     <section class="flex w-full justify-between my-2">
-      <p>Creation Date: {{comment[4]}}</p>
-      <p>Creation Time: {{comment[5]}}</p>
+      <p class="flex items-center">
+        <i class="ti ti-calendar mr-1 text-xl"></i>{{comment[4]}}
+      </p>
+      <p class="flex items-center">
+        <i class="ti ti-clock mr-1 text-xl"></i>{{comment[5]}}
+      </p>
     </section>
     <a
       href="/post/{{comment[1]}}"

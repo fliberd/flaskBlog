@@ -59,14 +59,24 @@ from helpers import (
     RECAPTCHA_POST_EDIT,
     RECAPTCHA_SECRET_KEY,
     RECAPTCHA_VERIFY_URL,
+    RECAPTCHA_DELETE_USER,
+    RECAPTCHA_POST_DELETE,
     RECAPTCHA_VERIFY_USER,
     RECAPTCHA_POST_CREATE,
+    RECAPTCHA_COMMENT_DELETE,
     RECAPTCHA_PASSWORD_RESET,
     RECAPTCHA_PASSWORD_CHANGE,
     RECAPTCHA_USERNAME_CHANGE,
     RECAPTCHA_PROFILE_PICTURE_CHANGE,
 )
-from UISelector import TEMPLATE_FOLDER, STATIC_FOLDER
+
+match TAILWIND_UI:
+    case True:
+        TEMPLATE_FOLDER = "templates/tailwindUI"
+        STATIC_FOLDER = "static/tailwindUI"
+    case False:
+        TEMPLATE_FOLDER = "templates/standardUI"
+        STATIC_FOLDER = "static/standardUI"
 
 app = Flask(
     import_name=APP_NAME,
@@ -114,11 +124,18 @@ match RECAPTCHA:
                 message("6", f"RECAPTCHA SIGN UP: {RECAPTCHA_SIGN_UP }")
                 message("6", f"RECAPTCHA POST CREATE: {RECAPTCHA_POST_CREATE}")
                 message("6", f"RECAPTCHA POST EDIT: {RECAPTCHA_POST_EDIT }")
+                message("6", f"RECAPTCHA POST DELETE: {RECAPTCHA_POST_DELETE}")
                 message("6", f"RECAPTCHA COMMENT: {RECAPTCHA_COMMENT}")
+                message("6", f"RECAPTCHA COMMENT DELETE: {RECAPTCHA_COMMENT_DELETE}")
                 message("6", f"RECAPTCHA PASSWORD RESET: {RECAPTCHA_PASSWORD_RESET}")
                 message("6", f"RECAPTCHA PASSWORD CHANGE: {RECAPTCHA_PASSWORD_CHANGE}")
                 message("6", f"RECAPTCHA USERNAME CHANGE: {RECAPTCHA_USERNAME_CHANGE}")
                 message("6", f"RECAPTCHA VERIFY USER: {RECAPTCHA_VERIFY_USER}")
+                message("6", f"RECAPTCHA DELETE USER: {RECAPTCHA_DELETE_USER}")
+                message(
+                    "6",
+                    f"RECAPTCHA USER PROFILE PICTURE CHANGE: {RECAPTCHA_PROFILE_PICTURE_CHANGE}",
+                )
                 message(
                     "6",
                     f"RECAPTCHA PROFILE PICTURE CHANGE: {RECAPTCHA_PROFILE_PICTURE_CHANGE}",

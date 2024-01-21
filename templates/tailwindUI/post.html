@@ -1,21 +1,27 @@
 {% extends 'layout.html'%} {%block head%}
 <title>{{title}}</title>
 {% endblock head %} {%block body%}
-<div class="w-11/12 lg:w-5/6 xl:w-6/12 mx-auto mt-16 break-words">
-  <h1 class="text-3xl mb-6 text-rose-500 w-full text-center select-none ">
+<div class="w-11/12 md:w-5/6 lg:w-7/12 xl:w-5/12 mx-auto mt-16 break-words">
+  <h1 class="text-3xl mb-6 text-rose-500 w-full text-center font-bold">
     {{title}}
   </h1>
   <p>
     {{content|safe}} <br />
-    <div class="flex items-center"><i class="ti ti-tags mr-1 text-2xl"></i>
-     {{tags.replace(",",", ")}} </div>
   </p>
-  <div class="flex place-content-between my-4">
-    <div class="text-left">
-      <h5 class="m-2"><div class="flex items-center"><i class="ti ti-eye mr-1 text-2xl"></i>
+  <div class="select-none">
+    <div class="flex w-full justify-between my-1">
+      <div class="flex items-center"><i class="ti ti-tags mr-1 text-2xl"></i>
+        {{tags.replace(",",", ")}} </div>
+        <a target="_blank" href="https://x.com/intent/tweet?text={{title}} by {{author}} on {{appName}} {{ request.url }}"><i class="hover:text-rose-500 duration-150 ti ti-brand-x text-2xl"></i></a>
+    </div>
+    <div class="flex w-full justify-between my-1">
+      <h5 ><div class="flex items-center"><i class="ti ti-eye mr-1 text-2xl"></i>
        {{views}}</div></h5>
-      <a href="/user/{{author|lower}}">
-        <h5 class="m-2 flex items-baseline">
+       <h5 >{{time}}</h5>
+    </div>
+    <div class="flex w-full justify-between my-1">
+      <a href="/user/{{author|lower}}" class="hover:text-rose-500 duration-150">
+        <h5 class="m-1 flex">
           <img
             class="w-6 mr-2 select-none"
             src="{{ getProfilePicture(author) }}"
@@ -23,10 +29,7 @@
           />{{author}}
         </h5></a
       >
-    </div>
-    <div class="text-right">
-      <h5 class="m-2">{{time}}</h5>
-      <h5 class="m-2">{{date}}</h5>
+      <h5 >{{date}}</h5>
     </div>
   </div>
   {% if author == session["userName"] %}
@@ -41,36 +44,36 @@
     </a>
   </div>
   {% endif %}
-  <div class="flex flex-col">
+  <div>
     {% for comment in comments %}
-    <div class="flex justify-between gap-8 mx-auto mt-8 mb-4 p-2 items-center max-w-xl">
-      <div >
-        <a href="/user/{{comment[3]}}" class="flex gap-3 items-center"><img
-          class="w-8 select-none"
+    <div class="flex flex-col mx-auto mt-8 mb-4 p-2 max-w-lg">
+      <div class="flex w-full justify-between my-1"><div class="mx-2 my-1">
+        <a href="/user/{{comment[3]}}" class="flex gap-3 items-center hover:text-rose-500 duration-150 select-none"><img
+          class="w-8"
           src="{{ getProfilePicture(comment[3]) }}"
           alt=""
-        /> <div class="hidden md:block">{{comment[3]}}:</div> </a>
+        /> <div class="mr-1">{{comment[3]}}:</div> </a>
       </div>
-      <p class="break-words max-w-52 md:max-w-72">{{comment[2]}}</p>{% if session["userName"] == comment[3] %}
-      <form method="post">
+      <form method="post" class="mx-2 my-1">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <input type="hidden" name="commentID" value="{{comment[0]}}" />
         <button type="submit" name="commentDeleteButton" class="hover:text-rose-500 duration-150">
           <i class="ti ti-trash-x mr-1 text-xl"></i>
         </button>
-      </form>
+      </form></div>
+      <p class="break-words ml-8">{{comment[2]}}</p>{% if session["userName"] == comment[3] %}
     </div>
     {% endif %} 
     </div>
     {% endfor %}
   </div>
-  <div class="mx-auto w-fit text-center my-8"><form method="post" class="w-full">
+  <div class="mx-auto text-center my-8 w-10/12 md:w-5/12 lg:w-4/12 xl:w-3/12"><form method="post" class="">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     {% if session["userName"] %} <div class="border w-full mx-auto rounded border-rose-500/25 flex justify-between content-center">{{form.comment(class_="bg-transparent focus:outline-none rounded-md p-2 text-center h-20 w-72 resize-none mx-auto mb-0")}}
       <button type="submit" class="hover:text-rose-500 duration-150 mb-2 text-lg text-right m-2"><i class="ti ti-arrow-narrow-up mr-1 text-xl"></i>
       </button></div>
     {% else %}
-    <p>
+    <p class="select-none">
       you need
       <a
         href="/login/redirect=&post&{{id}}"

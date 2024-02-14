@@ -1,45 +1,62 @@
-from helpers import (
-    abort,
-    flash,
-    LOG_IN,
-    session,
-    request,
-    sqlite3,
-    message,
-    redirect,
-    RECAPTCHA,
-    addPoints,
-    Blueprint,
-    loginForm,
-    requestsPost,
-    sha256_crypt,
-    DB_USERS_ROOT,
-    render_template,
-    RECAPTCHA_LOGIN,
-    RECAPTCHA_SITE_KEY,
-    RECAPTCHA_VERIFY_URL,
-    RECAPTCHA_SECRET_KEY,
+# Import necessary modules and functions
+from modules import (
+    Log,  # Custom logging module
+    abort,  # Function to abort request processing
+    flash,  # Flash messaging module
+    LOG_IN,  # Flag indicating if login is enabled
+    session,  # Session handling module
+    request,  # Request handling module
+    sqlite3,  # SQLite database module
+    redirect,  # Redirect function
+    RECAPTCHA,  # Flag for enabling reCAPTCHA
+    addPoints,  # Function to add points to user's score
+    Blueprint,  # Blueprint for defining routes
+    LoginForm,  # Form class for login
+    encryption,  # Encryption utility module
+    requestsPost,  # Function for making POST requests
+    DB_USERS_ROOT,  # Path to the users database
+    render_template,  # Template rendering function
+    RECAPTCHA_LOGIN,  # Flag for enabling reCAPTCHA for login
+    RECAPTCHA_SITE_KEY,  # reCAPTCHA site key
+    RECAPTCHA_VERIFY_URL,  # reCAPTCHA verification URL
+    RECAPTCHA_SECRET_KEY,  # reCAPTCHA secret key
 )
 
+# Create a blueprint for the login route
 loginBlueprint = Blueprint("login", __name__)
 
 
+# Define a route for login
 @loginBlueprint.route("/login/redirect=<direct>", methods=["GET", "POST"])
 def login(direct):
-    direct = direct.replace("&", "/")
+    """
+    This function handles the login process for the website.
+
+    Args:
+        direct (str): The direct link to redirect to after login.
+
+    Returns:
+        tuple: A tuple containing the redirect response and status code.
+
+    Raises:
+        401: If the login is unsuccessful.
+    """
+    direct = direct.replace("&", "/")  # Convert direct link parameter
     match LOG_IN:
         case True:
             match "userName" in session:
                 case True:
-                    message("1", f'USER: "{session["userName"]}" ALREADY LOGGED IN')
+                    # If user is already logged in, redirect
+                    Log.danger(f'User: "{session["userName"]}" already logged in')
                     return (
                         redirect(direct),
                         301,
                     )
                 case False:
-                    form = loginForm(request.form)
+                    form = LoginForm(request.form)
                     match request.method == "POST":
                         case True:
+                            # Retrieve form data
                             userName = request.form["userName"]
                             password = request.form["password"]
                             userName = userName.replace(" ", "")
@@ -52,13 +69,15 @@ def login(direct):
                             user = cursor.fetchone()
                             match not user:
                                 case True:
-                                    message("1", f'USER: "{userName}" NOT FOUND')
-                                    flash("user not found", "error")
+                                    # If user not found, show error message
+                                    Log.danger(f'User: "{userName}" not found')
+                                    flash("User not found.", "error")
                                 case _:
-                                    match sha256_crypt.verify(password, user[3]):
+                                    match encryption.verify(password, user[3]):
                                         case True:
                                             match RECAPTCHA and RECAPTCHA_LOGIN:
                                                 case True:
+                                                    # Perform reCAPTCHA verification
                                                     secretResponse = request.form[
                                                         "g-recaptcha-response"
                                                     ]
@@ -71,47 +90,62 @@ def login(direct):
                                                         "score"
                                                     ] > 0.5:
                                                         case True:
-                                                            message("2",f"LOGIN RECAPTCHA | VERIFICATION: {verifyResponse["success"]} | VERIFICATION SCORE: {verifyResponse["score"]}")
+                                                            # Logs the user in if the reCAPTCHA verification is successful
+                                                            Log.success(
+                                                                f"Login reCAPTCHA | verification: {verifyResponse['success']} | verification score: {verifyResponse['score']}",
+                                                            )
                                                             session["userName"] = user[
                                                                 1
+                                                            ]
+                                                            session["userRole"] = user[
+                                                                5
                                                             ]
                                                             addPoints(
                                                                 1, session["userName"]
                                                             )
-                                                            message(
-                                                                "2",
+                                                            Log.success(
                                                                 f'USER: "{user[1]}" LOGGED IN',
                                                             )
                                                             flash(
-                                                                f"Welcome {user[1]}",
+                                                                f"Welcome, {user[1]}!",
                                                                 "success",
                                                             )
                                                             return (
                                                                 redirect(direct),
                                                                 301,
                                                             )
+
                                                         case False:
-                                                            message("1",f"LOGIN RECAPTCHA | VERIFICATION: {verifyResponse["success"]} | VERIFICATION SCORE: {verifyResponse["score"]}")
+                                                            # Returns an unauthorized error if the reCAPTCHA verification is unsuccessful
+                                                            Log.danger(
+                                                                f"Login reCAPTCHA | verification: {verifyResponse['success']} | verification score: {verifyResponse['score']}",
+                                                            )
                                                             abort(401)
+
                                                 case False:
+                                                    # Logs the user in if reCAPTCHA is not required
                                                     session["userName"] = user[1]
+                                                    session["userRole"] = user[5]
                                                     addPoints(1, session["userName"])
-                                                    message(
-                                                        "2",
-                                                        f'USER: "{user[1]}" LOGGED IN',
+                                                    Log.success(
+                                                        f'User: "{user[1]}" logged in',
                                                     )
                                                     flash(
-                                                        f"Welcome {user[1]}", "success"
+                                                        f"Welcome, {user[1]}!",
+                                                        "success",
                                                     )
                                                     return (
                                                         redirect(direct),
                                                         301,
                                                     )
+
                                         case _:
-                                            message("1", "WRONG PASSWORD")
-                                            flash("wrong  password", "error")
+                                            # Returns an incorrect password error if the password is incorrect
+                                            Log.danger("Wrong password")
+                                            flash("Wrong password.", "error")
+                    # Render login template with appropriate form and messages
                     return render_template(
-                        "login.html",
+                        "login.html.jinja",
                         form=form,
                         hideLogin=True,
                         siteKey=RECAPTCHA_SITE_KEY,

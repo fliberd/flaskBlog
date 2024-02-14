@@ -1,39 +1,58 @@
-from helpers import (
-    flash,
-    abort,
-    session,
-    sqlite3,
-    request,
-    message,
-    redirect,
-    Blueprint,
-    RECAPTCHA,
-    currentDate,
-    currentTime,
-    requestsPost,
-    DB_POSTS_ROOT,
-    DB_USERS_ROOT,
-    createPostForm,
-    render_template,
-    RECAPTCHA_SITE_KEY,
-    RECAPTCHA_VERIFY_URL,
-    RECAPTCHA_SECRET_KEY,
-    RECAPTCHA_POST_EDIT,
+# Import necessary modules and functions
+from modules import (
+    Log,  # Logging module
+    flash,  # Flash messaging module
+    abort,  # Function for aborting requests
+    session,  # Session management module
+    sqlite3,  # SQLite database module
+    request,  # Module for handling HTTP requests
+    redirect,  # Function for redirecting requests
+    Blueprint,  # Blueprint class for creating modular applications
+    RECAPTCHA,  # Recaptcha module
+    requestsPost,  # Module for making HTTP POST requests
+    DB_POSTS_ROOT,  # Path to the posts database
+    DB_USERS_ROOT,  # Path to the users database
+    CreatePostForm,  # Form for creating a post
+    render_template,  # Function for rendering templates
+    currentTimeStamp,  # Function for getting current timestamp
+    RECAPTCHA_SITE_KEY,  # Recaptcha site key
+    RECAPTCHA_POST_EDIT,  # # Flag for enabling/disabling Recaptcha for post editing
+    RECAPTCHA_VERIFY_URL,  # Recaptcha verification URL
+    RECAPTCHA_SECRET_KEY,  # Recaptcha secret key
 )
 
+# Create a blueprint for the edit post route
 editPostBlueprint = Blueprint("editPost", __name__)
 
 
+# Define a route for editing a post
 @editPostBlueprint.route("/editpost/<int:postID>", methods=["GET", "POST"])
 def editPost(postID):
+    """
+    This function handles the edit post route.
+
+    Args:
+        postID (int): the ID of the post to edit
+
+    Returns:
+        The rendered edit post template or a redirect to the homepage if the user is not authorized to edit the post
+
+    Raises:
+        abort(404): if the post does not exist
+        abort(401): if the user is not authorized to edit the post
+    """
+    # Check if "userName" exists in session
     match "userName" in session:
         case True:
+            # Connect to the posts database
             connection = sqlite3.connect(DB_POSTS_ROOT)
             cursor = connection.cursor()
             cursor.execute("select id from posts")
             posts = str(cursor.fetchall())
+            # Check if postID exists in posts
             match str(postID) in posts:
                 case True:
+                    # Connect to the posts database
                     connection = sqlite3.connect(DB_POSTS_ROOT)
                     cursor = connection.cursor()
                     cursor.execute(
@@ -41,48 +60,69 @@ def editPost(postID):
                         [(postID)],
                     )
                     post = cursor.fetchone()
-                    message("2", f'POST: "{postID}" FOUND')
+                    Log.success(f'POST: "{postID}" FOUND')
+                    # Connect to the users database
                     connection = sqlite3.connect(DB_USERS_ROOT)
                     cursor = connection.cursor()
                     cursor.execute(
                         """select userName from users where userName = ? """,
                         [(session["userName"])],
                     )
-                    match post[4] == session["userName"]:
+                    # Check if the user is authorized to edit the post
+                    match post[5] == session["userName"] or session[
+                        "userRole"
+                    ] == "admin":
                         case True:
-                            form = createPostForm(request.form)
+                            # Populate the form with post data
+                            form = CreatePostForm(request.form)
                             form.postTitle.data = post[1]
                             form.postTags.data = post[2]
                             form.postContent.data = post[3]
+                            form.postCategory.data = post[9]
+                            # Check if the request method is POST
                             match request.method == "POST":
                                 case True:
+                                    # Retrieve post data from the form
                                     postTitle = request.form["postTitle"]
                                     postTags = request.form["postTags"]
                                     postContent = request.form["postContent"]
+                                    postCategory = request.form["postCategory"]
+                                    postBanner = request.files["postBanner"].read()
+                                    # Check if post content is empty
                                     match postContent == "":
                                         case True:
-                                            flash("post content not be empty", "error")
-                                            message(
-                                                "1",
-                                                f'POST CONTENT NOT BE EMPTY USER: "{session["userName"]}"',
+                                            flash("Post content not be empty.", "error")
+                                            Log.danger(
+                                                f'User: "{session["userName"]}" tried to edit a post with empty content',
                                             )
                                         case False:
+                                            # Check Recaptcha if enabled
                                             match RECAPTCHA and RECAPTCHA_POST_EDIT:
                                                 case True:
+                                                    # Verify Recaptcha response
                                                     secretResponse = request.form[
-                                                                        "g-recaptcha-response"
-                                                                    ]
+                                                        "g-recaptcha-response"
+                                                    ]
                                                     verifyResponse = requestsPost(
-                                                                        url=f"{RECAPTCHA_VERIFY_URL}?secret={RECAPTCHA_SECRET_KEY}&response={secretResponse}"
-                                                                    ).json()
+                                                        url=f"{RECAPTCHA_VERIFY_URL}?secret={RECAPTCHA_SECRET_KEY}&response={secretResponse}"
+                                                    ).json()
+                                                    # Check Recaptcha verification result
                                                     match verifyResponse[
-                                                                        "success"
-                                                                    ] == True or verifyResponse[
-                                                                        "score"
-                                                                    ] > 0.5:
+                                                        "success"
+                                                    ] == True or verifyResponse[
+                                                        "score"
+                                                    ] > 0.5:
                                                         case True:
-                                                            message("2",f"POST EDIT RECAPTCHA | VERIFICATION: {verifyResponse["success"]} | VERIFICATION SCORE: {verifyResponse["score"]}")
-                                                            connection = sqlite3.connect(DB_POSTS_ROOT)
+                                                            # Log the reCAPTCHA verification result
+                                                            Log.success(
+                                                                f"Post edit reCAPTCHA| verification: {verifyResponse['success']} | verification score: {verifyResponse['score']}",
+                                                            )
+                                                            # Update post data in the database
+                                                            connection = (
+                                                                sqlite3.connect(
+                                                                    DB_POSTS_ROOT
+                                                                )
+                                                            )
                                                             cursor = connection.cursor()
                                                             cursor.execute(
                                                                 """update posts set title = ? where id = ? """,
@@ -97,22 +137,44 @@ def editPost(postID):
                                                                 (postContent, post[0]),
                                                             )
                                                             cursor.execute(
-                                                                """update posts set lastEditDate = ? where id = ? """,
-                                                                [(currentDate()), (post[0])],
+                                                                """update posts set category = ? where id = ? """,
+                                                                (postCategory, post[0]),
                                                             )
                                                             cursor.execute(
-                                                                """update posts set lastEditTime = ? where id = ? """,
-                                                                [(currentTime()), (post[0])],
+                                                                """update posts set banner = ? where id = ? """,
+                                                                (postBanner, post[0]),
+                                                            )
+                                                            cursor.execute(
+                                                                """update posts set lastEditTimeStamp = ? where id = ? """,
+                                                                [
+                                                                    (
+                                                                        currentTimeStamp()
+                                                                    ),
+                                                                    (post[0]),
+                                                                ],
                                                             )
                                                             connection.commit()
-                                                            message("2", f'POST: "{postTitle}" EDITED')
-                                                            flash("Post edited", "success")
-                                                            return redirect(f"/post/{post[0]}")
+                                                            Log.success(
+                                                                f'Post: "{postTitle}" edited',
+                                                            )
+                                                            flash(
+                                                                "Post edited.",
+                                                                "success",
+                                                            )
+                                                            return redirect(
+                                                                f"/post/{post[0]}"
+                                                            )
                                                         case False:
-                                                            message("1",f"POST EDIT RECAPTCHA | VERIFICATION: {verifyResponse["success"]} | VERIFICATION SCORE: {verifyResponse["score"]}")
+                                                            # Recaptcha verification failed
+                                                            Log.danger(
+                                                                f"Post edit reCAPTCHA | verification: {verifyResponse['success']} | verification score: {verifyResponse['score']}",
+                                                            )
                                                             abort(401)
                                                 case False:
-                                                    connection = sqlite3.connect(DB_POSTS_ROOT)
+                                                    # Recaptcha not enabled
+                                                    connection = sqlite3.connect(
+                                                        DB_POSTS_ROOT
+                                                    )
                                                     cursor = connection.cursor()
                                                     cursor.execute(
                                                         """update posts set title = ? where id = ? """,
@@ -127,19 +189,30 @@ def editPost(postID):
                                                         (postContent, post[0]),
                                                     )
                                                     cursor.execute(
-                                                        """update posts set lastEditDate = ? where id = ? """,
-                                                        [(currentDate()), (post[0])],
+                                                        """update posts set category = ? where id = ? """,
+                                                        (postCategory, post[0]),
                                                     )
                                                     cursor.execute(
-                                                        """update posts set lastEditTime = ? where id = ? """,
-                                                        [(currentTime()), (post[0])],
+                                                        """update posts set banner = ? where id = ? """,
+                                                        (postBanner, post[0]),
+                                                    )
+                                                    cursor.execute(
+                                                        """update posts set lastEditTimeStamp = ? where id = ? """,
+                                                        [
+                                                            (currentTimeStamp()),
+                                                            (post[0]),
+                                                        ],
                                                     )
                                                     connection.commit()
-                                                    message("2", f'POST: "{postTitle}" EDITED')
-                                                    flash("Post edited", "success")
+                                                    Log.success(
+                                                        f'Post: "{postTitle}" edited',
+                                                    )
+                                                    flash("Post edited.", "success")
                                                     return redirect(f"/post/{post[0]}")
+                            # Render the edit post template
                             return render_template(
-                                "/editPost.html",
+                                "/editPost.html.jinja",
+                                id=post[0],
                                 title=post[1],
                                 tags=post[2],
                                 content=post[3],
@@ -148,16 +221,18 @@ def editPost(postID):
                                 recaptcha=RECAPTCHA,
                             )
                         case False:
-                            flash("this post not yours", "error")
-                            message(
-                                "1",
-                                f'THIS POST DOES NOT BELONG TO USER: "{session["userName"]}"',
+                            # User is not authorized to edit the post
+                            flash("This post is not yours.", "error")
+                            Log.danger(
+                                f'User: "{session["userName"]}" tried to edit another authors post',
                             )
                             return redirect("/")
                 case False:
-                    message("1", f'POST: "{postID}" NOT FOUND')
-                    return render_template("404.html")
+                    # Post with postID does not exist
+                    Log.danger(f'Post: "{postID}" not found')
+                    return render_template("notFound.html.jinja")
         case False:
-            message("1", "USER NOT LOGGED IN")
-            flash("you need login for edit a post", "error")
+            # User is not logged in
+            Log.danger(f"{request.remote_addr} tried to edit post without login")
+            flash("You need login for edit a post.", "error")
             return redirect(f"/login/redirect=&editpost&{postID}")

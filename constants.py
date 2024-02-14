@@ -1,64 +1,162 @@
-from helpers import secrets, socket
+"""
+This module contains all the general application settings.
+"""
+
+# Import necessary modules from the modules module
+from modules import secrets, socket
 
 
-### GENERAL APP SETTINGS ###
-APP_NAME = "flaskBlog"  # NAME OF THE FLASK APP.
-APP_ROOT_PATH = "."  # THE PATH TO THE ROOT OF THE APP FILES.
-APP_HOST = socket.gethostbyname(
-    socket.gethostname()
-)  # FLASK APP'S HOST (OR USE "localhost")
-APP_PORT = 5000  # FLASK APP'S PORT.
-DEBUG_MODE = True  # TURN ON/OFF FLASK DEBUG MODE.
-TAILWIND_UI = True  # SELECT TAILWIND-UI(NEW)/STANDARD-UI(OLD).
-LOG_IN = True  # TURN ON/OFF USER LOG IN UP.
-REGISTRATION = True  # TURN ON/OFF USER SIGN UP.
-LOG_FILE_ROOT = "log.log"  # ROOT OF THE LOG FILE FROM WHERE MESSAGES ARE PRINTED FROM THE MESSAGE MODULE.
-APP_SECRET_KEY = secrets.token_urlsafe(32)  # FLASK APP'S SECRET KEY.
-SESSION_PERMANENT = True  # FLASK APP'S SESSIONS.
-BREAKER_TEXT = "===================================================================================================="
+# Name of the Flask application
+APP_NAME = "flaskBlog"  # (str)
+
+# Version of the Flask application
+APP_VERSION = "2.0.0-DEV"  # (str)
+
+# Path to the root of the application files
+APP_ROOT_PATH = "."  # (str)
+
+# Hostname or IP address for the Flask application
+APP_HOST = socket.gethostbyname(socket.gethostname())  # (str)
+
+# Port number for the Flask application
+APP_PORT = 5000  # (int)
+
+# Toggle debug mode for the Flask application
+DEBUG_MODE = True  # (bool)
+
+# Name of the UI framework being used
+UI_NAME = "tailwindUI"  # (str)
+
+# Path to the templates folder
+TEMPLATE_FOLDER = f"templates/{UI_NAME}"  # (str)
+
+# Path to the static folder
+STATIC_FOLDER = f"static/{UI_NAME}"  # (str)
+
+# Toggle user login feature
+LOG_IN = True  # (bool)
+
+# Toggle user registration feature
+REGISTRATION = True  # (bool)
+
+### LOGGER SETTINGS ###
+# Toggle custom logging feature
+CUSTOM_LOGGER = True  # (bool)
+
+# Toggle werkzeug logging feature
+WERKZEUG_LOGGER = False  # (bool)
+
+# Root path of the log folder
+LOG_FOLDER_ROOT = "log/"  # (str)
+
+# Root path of the log file
+LOG_FILE_ROOT = LOG_FOLDER_ROOT + "log.log"  # (str)
+
+# Root path of the danger log file
+LOG_DANGER_FILE_ROOT = LOG_FOLDER_ROOT + "logDanger.log"  # (str)
+
+# Root path of the success log file
+LOG_SUCCESS_FILE_ROOT = LOG_FOLDER_ROOT + "logSuccess.log"  # (str)
+
+# Root path of the warning log file
+LOG_WARNING_FILE_ROOT = LOG_FOLDER_ROOT + "logWarning.log"  # (str)
+
+# Root path of the info log file
+LOG_INFO_FILE_ROOT = LOG_FOLDER_ROOT + "logInfo.log"  # (str)
+
+# Root path of the app log file
+LOG_APP_FILE_ROOT = LOG_FOLDER_ROOT + "logApp.log"  # (str)
+
+
+# Secret key for Flask sessions
+APP_SECRET_KEY = secrets.token_urlsafe(32)  # (str)
+
+# Toggle permanent sessions for the Flask application
+SESSION_PERMANENT = True  # (bool)
+
+# Separator text used in log files
+BREAKER_TEXT = "\n"  # (str)
+
 
 ### DATABASE SETTINGS ###
-DB_FOLDER_ROOT = "db"  # ROOT OF THE DATABASE FOLDER WHERE .db FILES ARE LOCATED.
-DB_USERS_ROOT = DB_FOLDER_ROOT + "/users.db"  # ROOT OF THE USERS DATABASE.
-DB_POSTS_ROOT = DB_FOLDER_ROOT + "/posts.db"  # ROOT OF THE POSTS DATABASE.
-DB_COMMENTS_ROOT = DB_FOLDER_ROOT + "/comments.db"  # ROOT OF THE COMMENTS DATABASE.
+
+# Root path of the database folder
+DB_FOLDER_ROOT = "db/"  # (str)
+
+# Root path of the users database
+DB_USERS_ROOT = DB_FOLDER_ROOT + "users.db"  # (str)
+
+# Root path of the posts database
+DB_POSTS_ROOT = DB_FOLDER_ROOT + "posts.db"  # (str)
+
+# Root path of the comments database
+DB_COMMENTS_ROOT = DB_FOLDER_ROOT + "comments.db"  # (str)
+
+
+### SMTP MAIL SETTINGS ###
+
+# SMTP server address
+SMTP_SERVER = "smtp.gmail.com"  # (str)
+
+# SMTP server port
+SMTP_PORT = 587  # (int)
+
+# SMTP mail address
+SMTP_MAIL = "flaskblogdogukanurker@gmail.com"  # (str)
+
+# SMTP mail password
+SMTP_PASSWORD = "lsooxsmnsfnhnixy"  # (str)
+
+
+### DEFAULT ADMIN ACCOUNT SETTINGS ###
+
+# Toggle creation of default admin account
+DEFAULT_ADMIN = True  # (bool)
+
+# Default admin username
+DEFAULT_ADMIN_USERNAME = "admin"  # (str)
+
+# Default admin email address
+DEFAULT_ADMIN_EMAIL = "admin@flaskblog.com"  # (str)
+
+# Default admin password
+DEFAULT_ADMIN_PASSWORD = "admin"  # (str)
+
+# Default starting point score for admin
+DEFAULT_ADMIN_POINT = 0  # (int)
+
+# Default admin profile picture URL
+DEFAULT_ADMIN_PROFILE_PICTURE = f"https://api.dicebear.com/7.x/identicon/svg?seed={DEFAULT_ADMIN_USERNAME}&radius=10"  # (str)
 
 
 ### RECAPTCHA SETTINGS ###
-RECAPTCHA = False  # TURN ON/OFF RECAPTCHA VERIFICATION. MORE INFO ABOUT RECAPTCHA: https://developers.google.com/recaptcha/docs/v3
-RECAPTCHA_SITE_KEY = ""  # RECAPTCHA SITE KEY. SIGN UP FOR API KEY PAIR: http://www.google.com/recaptcha/admin
-RECAPTCHA_SECRET_KEY = ""  # RECAPTCHA SECRET KEY. SIGN UP FOR API KEY PAIR: http://www.google.com/recaptcha/admin
-RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"  # RECAPTCHA VERIFY URL. DO NOT NEED TO CHANGE THIS.
 
-# IF RECAPTCHA = False, YOU DO NOT NEED TO CHANGE THESE VARIABLES:
-RECAPTCHA_LOGIN = True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "LOGIN" ACTION.
-RECAPTCHA_SIGN_UP = True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "SIGNUP" ACTION.
-RECAPTCHA_POST_CREATE = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "CREATE POST" ACTION.
-)
-RECAPTCHA_POST_EDIT = True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "EDIT POST" ACTION.
-RECAPTCHA_POST_DELETE = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "DELETE POST" ACTION.
-)
-RECAPTCHA_COMMENT = True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "COMMENT" ACTION.
-RECAPTCHA_COMMENT_DELETE = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "DELETE COMMENT" ACTION.
-)
-RECAPTCHA_PASSWORD_RESET = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "PASSWORD RESET" ACTION.
-)
-RECAPTCHA_PASSWORD_CHANGE = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "PASSWORD CHANGE" ACTION.
-)
-RECAPTCHA_USERNAME_CHANGE = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "USERNAME CHANGE" ACTION.
-)
-RECAPTCHA_VERIFY_USER = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "VERIFY USER" ACTION.
-)
-RECAPTCHA_DELETE_USER = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "DELETE USER" ACTION.
-)
-RECAPTCHA_PROFILE_PICTURE_CHANGE = (
-    True  # TURN ON/OFF RECAPTCHA VERIFICATION FOR "PROFILE PICTURE CHANGE" ACTION.
-)
+# Toggle reCAPTCHA verification
+RECAPTCHA = False  # (bool)
+
+# Toggle display of reCAPTCHA badge
+RECAPTCHA_BADGE = False  # (bool)
+
+# reCAPTCHA site key
+RECAPTCHA_SITE_KEY = ""  # (str)
+
+# reCAPTCHA secret key
+RECAPTCHA_SECRET_KEY = ""  # (str)
+
+# reCAPTCHA verify URL
+RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"  # (str)
+
+# Toggle reCAPTCHA verification for different actions
+RECAPTCHA_LOGIN = True  # (bool)
+RECAPTCHA_SIGN_UP = True  # (bool)
+RECAPTCHA_POST_CREATE = True  # (bool)
+RECAPTCHA_POST_EDIT = True  # (bool)
+RECAPTCHA_POST_DELETE = True  # (bool)
+RECAPTCHA_COMMENT = True  # (bool)
+RECAPTCHA_COMMENT_DELETE = True  # (bool)
+RECAPTCHA_PASSWORD_RESET = True  # (bool)
+RECAPTCHA_PASSWORD_CHANGE = True  # (bool)
+RECAPTCHA_USERNAME_CHANGE = True  # (bool)
+RECAPTCHA_VERIFY_USER = True  # (bool)
+RECAPTCHA_DELETE_USER = True  # (bool)
+RECAPTCHA_PROFILE_PICTURE_CHANGE = True  # (bool)
